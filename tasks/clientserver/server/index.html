@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>НДС Калькулятор — Расчёт налога</title>
+    <style>
+        :root {
+            --dark-bg: #1e6b3b;
+            --sidebar-color: #2a7f45;
+            --accent: #ffcc00;
+            --text-light: #f5f5f5;
+            --card-bg: #ffffff;
+            --border-color: #d0d0d0;
+        }
+
+        * {
+            border-radius: 0 !important;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Calibri Light', 'Segoe UI', 'Calibri', sans-serif;
+            font-weight: 300;
+            display: flex;
+            height: 100vh;
+            background: #e8e8e8;
+            color: #222;
+        }
+
+        /* Основная область слева */
+        main {
+            flex-grow: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        /* Sidebar справа */
+        aside {
+            width: 320px;
+            background: var(--sidebar-color);
+            color: var(--text-light);
+            padding: 25px;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            border-left: 1px solid #1a4f2e;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .config-section {
+            margin-bottom: 25px;
+        }
+
+        .config-section h3 {
+            font-size: 14px;
+            color: #e0e0e0;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #3f7357;
+            padding-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .config-group {
+            margin-bottom: 20px;
+        }
+
+        .config-group label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            background: #3e8e5a;
+            border: 1px solid #1f5a3a;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: 'Calibri Light', 'Segoe UI', 'Calibri', sans-serif;
+        }
+
+        select option {
+            background: #2a7f45;
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: #c0e0c0;
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+
+        .header {
+            margin-bottom: 35px;
+            border-bottom: 2px solid var(--dark-bg);
+            padding-bottom: 10px;
+        }
+
+        .header h1 {
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 1000px;
+        }
+
+        .calc-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            transition: 0.2s;
+        }
+
+        .calc-card:focus-within {
+            border-color: var(--dark-bg);
+            background: #fefef7;
+        }
+
+        .calc-card label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        .calc-card input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            font-size: 18px;
+            transition: 0.2s;
+            font-family: 'Calibri Light', 'Segoe UI', 'Calibri', sans-serif;
+            box-sizing: border-box;
+            background: white;
+        }
+
+        .calc-card input:focus {
+            outline: none;
+            border-color: var(--dark-bg);
+            background: #fffef5;
+        }
+
+        /* Компактная результирующая панель */
+        .result-panel {
+            position: sticky;
+            bottom: 0;
+            background: var(--dark-bg);
+            color: white;
+            margin-top: 40px;
+            padding: 20px 30px;
+            border-top: 3px solid var(--accent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .results-compact {
+            display: flex;
+            gap: 40px;
+            align-items: baseline;
+            flex-wrap: wrap;
+        }
+
+        .result-item {
+            text-align: center;
+        }
+
+        .result-item .label {
+            font-size: 12px;
+            color: #ccc;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .result-item .value {
+            font-size: 24px;
+            font-weight: 500;
+        }
+
+        .result-item .value.vat {
+            color: var(--accent);
+        }
+
+        .total-big {
+            text-align: right;
+        }
+
+        .total-big .label {
+            font-size: 12px;
+            color: #ccc;
+        }
+
+        .total-big .value {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .vat-badge {
+            font-size: 12px;
+            background: #2c8e55;
+            padding: 5px 12px;
+            color: var(--accent);
+            font-weight: 600;
+            border: 1px solid #4fa06d;
+        }
+
+        button {
+            background: var(--accent);
+            border: 1px solid #b39700;
+            padding: 8px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s;
+            font-family: 'Calibri Light', 'Segoe UI', 'Calibri', sans-serif;
+            color: #1e3a2a;
+        }
+
+        button:hover {
+            background: #e6b800;
+            border-color: #8a7300;
+        }
+
+        .reset-btn {
+            background: #444;
+            border-color: #222;
+            color: white;
+        }
+
+        .reset-btn:hover {
+            background: #333;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* Стили для ссылки на налоговую */
+        .official-link {
+            margin-top: 25px;
+            padding: 12px 16px;
+            background: #f0f0f0;
+            border-left: 4px solid var(--dark-bg);
+            font-size: 14px;
+            text-align: center;
+            max-width: 1000px;
+            border-top: 1px solid #ddd;
+            border-right: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .official-link a {
+            color: var(--dark-bg);
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        
+        .official-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .official-link .small-text {
+            font-size: 12px;
+            color: #555;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            aside {
+                width: auto;
+                box-shadow: none;
+                border-left: none;
+                border-top: 1px solid #1a4f2e;
+                order: 2;
+            }
+            main {
+                order: 1;
+            }
+            .result-panel {
+                flex-direction: column;
+                text-align: center;
+            }
+            .total-big {
+                text-align: center;
+            }
+            .calculator-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <div class="header">
+            <h1>Расчёт НДС</h1>
+            <p>Введите суммы по категориям — налог рассчитается автоматически</p>
+        </div>
+
+        <div class="calculator-grid">
+            <div class="calc-card">
+                <label>Товары / Материалы (₽)</label>
+                <input type="number" id="goods" value="0" min="0" oninput="calculate()">
+            </div>
+            <div class="calc-card">
+                <label>Услуги / Работы (₽)</label>
+                <input type="number" id="services" value="0" min="0" oninput="calculate()">
+            </div>
+            <div class="calc-card">
+                <label>Аренда / Недвижимость (₽)</label>
+                <input type="number" id="rent" value="0" min="0" oninput="calculate()">
+            </div>
+            <div class="calc-card">
+                <label>Лицензии / ПО (₽)</label>
+                <input type="number" id="software" value="0" min="0" oninput="calculate()">
+            </div>
+            <div class="calc-card">
+                <label>Транспорт / Доставка (₽)</label>
+                <input type="number" id="delivery" value="0" min="0" oninput="calculate()">
+            </div>
+            <div class="calc-card">
+                <label>Прочие доходы (₽)</label>
+                <input type="number" id="other" value="0" min="0" oninput="calculate()">
+            </div>
+        </div>
+
+        <div class="official-link">
+            <a href="https://www.nalog.gov.ru/rn37/taxation/taxes/nds/" target="_blank" rel="noopener noreferrer">
+                Официальные разъяснения по НДС на сайте УФНС России по Ивановской области
+            </a>
+            <div class="small-text">
+                Ставки, льготы, порядок расчёта и уплаты — актуальная информация из первоисточника
+            </div>
+        </div>
+
+        <div class="result-panel">
+            <div class="results-compact">
+                <div class="result-item">
+                    <div class="label">Без НДС</div>
+                    <div class="value" id="withoutVat">0 ₽</div>
+                </div>
+                <div class="result-item">
+                    <div class="label">НДС</div>
+                    <div class="value vat" id="vatAmount">0 ₽</div>
+                </div>
+                <div class="total-big">
+                    <div class="label">ИТОГО С НДС</div>
+                    <div class="value" id="withVat">0 ₽</div>
+                </div>
+            </div>
+            <div class="action-buttons">
+                <span id="vat-info" class="vat-badge">20%</span>
+                <button class="reset-btn" onclick="resetAll()">Сброс</button>
+            </div>
+        </div>
+    </main>
+
+    <aside>
+        <div class="logo">Параметры НДС</div>
+        
+        <div class="config-section">
+            <h3>Выберите ставку</h3>
+            
+            <div class="config-group">
+                <label>Ставка налога</label>
+                <select id="vatRate" onchange="calculate()">
+                    <option value="0">0% — Экспорт, спецрежимы</option>
+                    <option value="10">10% — Продовольствие, детские товары</option>
+                    <option value="20" selected>20% — Основная ставка</option>
+                </select>
+            </div>
+
+            <div class="config-group">
+                <label>Режим расчёта</label>
+                <select id="calcMode" onchange="calculate()">
+                    <option value="plus">Начислить НДС (сумма + налог)</option>
+                    <option value="extract">Выделить НДС (сумма уже с налогом)</option>
+                </select>
+                <div class="info-text">
+                    Начисление — вы вводите сумму без НДС<br>
+                    Выделение — вы вводите сумму с НДС
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: auto; font-size: 12px; color: #a0d8b0;">
+            НДС — налог на добавленную стоимость.<br>
+            Ставка зависит от типа товара или услуги.
+        </div>
+    </aside>
+
+    <script>
+        function calculate() {
+            const vatPercent = parseFloat(document.getElementById('vatRate').value);
+            const mode = document.getElementById('calcMode').value;
+            
+            const goods = parseFloat(document.getElementById('goods').value) || 0;
+            const services = parseFloat(document.getElementById('services').value) || 0;
+            const rent = parseFloat(document.getElementById('rent').value) || 0;
+            const software = parseFloat(document.getElementById('software').value) || 0;
+            const delivery = parseFloat(document.getElementById('delivery').value) || 0;
+            const other = parseFloat(document.getElementById('other').value) || 0;
+            
+            let totalWithoutVat = goods + services + rent + software + delivery + other;
+            let vatAmount = 0;
+            let totalWithVat = 0;
+            
+            if (mode === 'plus') {
+                vatAmount = totalWithoutVat * (vatPercent / 100);
+                totalWithVat = totalWithoutVat + vatAmount;
+            } else {
+                totalWithVat = totalWithoutVat;
+                vatAmount = totalWithVat - (totalWithVat / (1 + vatPercent / 100));
+                totalWithoutVat = totalWithVat - vatAmount;
+            }
+            
+            totalWithoutVat = Math.round(totalWithoutVat * 100) / 100;
+            vatAmount = Math.round(vatAmount * 100) / 100;
+            totalWithVat = Math.round(totalWithVat * 100) / 100;
+            
+            document.getElementById('withoutVat').innerHTML = totalWithoutVat.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('vatAmount').innerHTML = vatAmount.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('withVat').innerHTML = totalWithVat.toLocaleString('ru-RU') + ' ₽';
+            
+            const modeText = mode === 'plus' ? 'начисление' : 'выделение';
+            document.getElementById('vat-info').innerHTML = `${vatPercent}% (${modeText})`;
+        }
+        
+        function resetAll() {
+            document.getElementById('goods').value = 0;
+            document.getElementById('services').value = 0;
+            document.getElementById('rent').value = 0;
+            document.getElementById('software').value = 0;
+            document.getElementById('delivery').value = 0;
+            document.getElementById('other').value = 0;
+            calculate();
+        }
+        
+        calculate();
+    </script>
+
+</body>
+</html>
