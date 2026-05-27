@@ -2,7 +2,10 @@
   "name": "clientserver",
   "version": "0.1.0",
   "private": true,
-  "workspaces": ["client", "server"],
+  "workspaces": [
+    "client",
+    "server"
+  ],
   "scripts": {
     "client:dev": "npm run dev -w client",
     "server:dev": "npm run dev -w server",
@@ -14,6 +17,7 @@
   },
   "devDependencies": {
     "husky": "^9.1.7",
-    "lint-staged": "^15.5.2"
+    "lint-staged": "^15.5.2",
+    "puppeteer": "^25.1.0"
   }
 }

@@ -13,7 +13,6 @@ export class Boss extends kitsune {
     return "Демон (Босс)";
   }
 
-  // Босс не использует специальные способности, только атакует
   public useAbility(target: kitsune, logger: Logger): void {
     this.attack(target, logger);
   }

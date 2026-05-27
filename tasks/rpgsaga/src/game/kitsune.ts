@@ -1,4 +1,5 @@
 import { Logger } from "./Logger";
+import { Skill } from "./Skill";
 
 export abstract class kitsune {
   protected _name: string;
@@ -13,6 +14,9 @@ export abstract class kitsune {
   protected _iceStacks: number = 0;
   protected _iceTurns: number = 0;
   protected _skipNextTurn: boolean = false;
+
+  // НОВОЕ: поддержка системы навыков
+  protected _skills: Skill[] = [];
 
   constructor(name: string, health: number, strength: number) {
     this._name = name;
@@ -65,7 +69,6 @@ export abstract class kitsune {
     return false;
   }
 
-  // Эти методы позволяют не "лезть" в чужой класс, а передать сообщение о получении эффекта
   public receiveIceArrow(baseDamage: number): void {
     this.takeDamage(baseDamage);
     this._iceStacks++;
@@ -109,5 +112,24 @@ export abstract class kitsune {
         this._iceStacks = 0;
       }
     }
+  }
+
+  // НОВЫЕ МЕТОДЫ для работы с навыками
+  public addSkill(skill: Skill): void {
+    skill.setOwner(this);
+    this._skills.push(skill);
+  }
+
+  public useSkill(skillIndex: number, target: kitsune | null, logger: Logger): boolean {
+    if (skillIndex < 0 || skillIndex >= this._skills.length) return false;
+    const skill = this._skills[skillIndex];
+    if (skill.isAvailable()) {
+      return skill.use(target, logger);
+    }
+    return false;
+  }
+
+  public getSkills(): Skill[] {
+    return this._skills;
   }
 }
